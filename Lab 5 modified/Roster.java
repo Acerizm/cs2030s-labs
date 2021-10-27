@@ -26,6 +26,7 @@ class Roster extends KeyableMap<Student> {
             String grade = super.get(studentId).get(moduleId).get(assessmentId).getGrade();
             return grade;
         } catch (Exception ex) {
+            //catch all the errors
             String result = String.format("No such record: %s %s %s",
                 studentId,moduleId,assessmentId);
             return result;
