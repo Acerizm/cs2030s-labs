@@ -15,9 +15,9 @@ class KeyableMap<T extends Keyable> implements Keyable {
         so that we can keep returning a new KeyableMap for immutability sake
 
         but why extend to Keyable?
-        because cannot assume V will implement Keyable
-        for example: V could be assessment which by right implements keyable
-        but since V is a generic type, some random object type could be passed to it
+        because cannot assume T will implement Keyable
+        for example: T could be assessment which by right implements keyable
+        but since T is a generic type, some random object type could be passed to it
         which does not implement Keyable
 
         also extends allow the subclasses below it that MUST implement Keyable 

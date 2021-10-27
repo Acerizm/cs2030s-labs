@@ -1,7 +1,6 @@
-class Roster extends KeyableMap<Student>{
+class Roster extends KeyableMap<Student> {
     // stores a student in a map via the put method
     // aka need to extend to KeyableMap
-
     //roster.get("StudentID") will return the Student
 
     //local variables
@@ -14,8 +13,29 @@ class Roster extends KeyableMap<Student>{
     }
 
     //getGrade method
-    public String getGrade() {
-        return super.get(this.rosterId);
+    //getGrade takes in (String studentId, String moduleId, String assessmentId)
+    // codecrunch wrong test method for getGrade lol
+    public String getGrade(String studentId,String moduleId, String assessmentId) {
+        //test what you get here
+        // need to check if the stuff is null value
+        // will get nullPointer exception
+        // 1. Either do the unelegant way (check for null value)
+        // 2. Or use Optionals 
+        // 3. or use Try-Catch ( Let's assume i use this)
+        try {
+            String grade = super.get(studentId).get(moduleId).get(assessmentId).getGrade();
+            return grade;
+        } catch (Exception ex) {
+            String result = String.format("No such record: %s %s %s",
+                studentId,moduleId,assessmentId);
+            return result;
+        }
+    }
+
+    @Override
+    public Roster put(Student student) {
+        super.put(student);
+        return this;
     }
 
     //toString
