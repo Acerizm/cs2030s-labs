@@ -45,6 +45,7 @@ class Module extends KeyableMap<Assessment> {
     */
 
     @Override
+    //returns a new Module given assessment
     public Module put(Assessment result) {
         super.put(result);
         return this;

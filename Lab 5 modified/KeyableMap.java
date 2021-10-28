@@ -1,4 +1,5 @@
 import java.util.Map;
+import java.util.Optional;
 import java.util.HashMap;
 
 class KeyableMap<T extends Keyable> implements Keyable {
@@ -37,9 +38,11 @@ class KeyableMap<T extends Keyable> implements Keyable {
         this.map = map;
     }
 
+    //Recode this generic method to an optional generic method
     public T get(String key) {
         // this one in the future need use optionals 
         // the value can be null value very hard to test with jshell
+        //Optional<T>  = Optional.ofNullable(this.map.get(key));
         return this.map.get(key);
     }
 
