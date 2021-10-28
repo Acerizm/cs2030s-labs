@@ -39,11 +39,11 @@ class KeyableMap<T extends Keyable> implements Keyable {
     }
 
     //Recode this generic method to an optional generic method
-    public T get(String key) {
+    public Optional<T> get(String key) {
         // this one in the future need use optionals 
         // the value can be null value very hard to test with jshell
         //Optional<T>  = Optional.ofNullable(this.map.get(key));
-        return this.map.get(key);
+        return Optional.ofNullable(this.map.get(key));
     }
 
     public String getKey() {

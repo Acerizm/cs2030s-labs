@@ -45,28 +45,46 @@ class Main {
                 //String grade = roster.getGrade(studentId,moduleId,assessmentId);
                 //something is wrong here keeps overriding the original array
                 // roster needs to add not put .
-                try {
-                    if (roster.get(studentId) == null) {
-                        roster.put(new Student(studentId))
-                            .get(studentId).put(new Module(moduleId))
-                            .get(moduleId).put(new Assessment(assessmentId, grade));
-                    } else {
-                        // when studentid exist in the roster already.
-                        //then check if the module exists alr
-                        if (roster.get(studentId).get(moduleId) == null) {
-                            roster.get(studentId)
-                                .put(new Module(moduleId)).get(moduleId)
-                                .put(new Assessment(assessmentId, grade));
-                        } else {
-                            //when the moduleId exists alr
-                            roster.get(studentId)
-                                .get(moduleId)
-                                .put(new Assessment(assessmentId, grade));
-                        }
-                    }
-                } catch (Exception error) {
-                    throw error;
-                }
+                // try {
+                //     if (roster.get(studentId) == null) {
+                //         roster.put(new Student(studentId))
+                //             .get(studentId).put(new Module(moduleId))
+                //             .get(moduleId).put(new Assessment(assessmentId, grade));
+                //     } else {
+                //         // when studentid exist in the roster already.
+                //         //then check if the module exists alr
+                //         if (roster.get(studentId).get(moduleId) == null) {
+                //             roster.get(studentId)
+                //                 .put(new Module(moduleId)).get(moduleId)
+                //                 .put(new Assessment(assessmentId, grade));
+                //         } else {
+                //             //when the moduleId exists alr
+                //             roster.get(studentId)
+                //                 .get(moduleId)
+                //                 .put(new Assessment(assessmentId, grade));
+                //         }
+                //     }
+                // } catch (Exception error) {
+                //     throw error;
+                // }
+                roster.get(studentId).ifPresentOrElse(
+                    // if student is present, do something
+                    student -> {
+                        student.get(moduleId).ifPresentOrElse(
+                            // if module is present, do soemthing
+                            module -> {
+                                module.put(new Assessment(assessmentId, grade));
+                            },
+                            // if module is not present, do something
+                            () -> student.put(new Module(moduleId)
+                                .put(new Assessment(assessmentId, grade)))
+                        );
+                    },
+                    // if student is not present, do something
+                    () -> roster.put(new Student(studentId)
+                        .put(new Module(moduleId)
+                            .put(new Assessment(assessmentId, grade))))
+                );
             }
         }
         

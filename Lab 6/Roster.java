@@ -22,17 +22,17 @@ class Roster extends KeyableMap<Student> {
         // need to check if the stuff is null value
         // will get nullPointer exception
         // 1. Either do the unelegant way (check for null value)
-        // 2. Or use Optionals 
-        // 3. or use Try-Catch ( Let's assume i use this)
-        try {
-            String grade = super.get(studentId).get(moduleId).get(assessmentId).getGrade();
-            return grade;
-        } catch (Exception ex) {
-            //catch all the errors
-            String result = String.format("No such record: %s %s %s",
-                studentId,moduleId,assessmentId);
-            return result;
-        }
+        // 2. Or use Optionals (I will use this for Lab 6)
+        // 3. or use Try-Catch 
+        // try {
+        //     String grade = super.get(studentId).get(moduleId).get(assessmentId).getGrade();
+        //     return grade;
+        // } catch (Exception ex) {
+        //     //catch all the errors
+        //     String result = String.format("No such record: %s %s %s",
+        //         studentId,moduleId,assessmentId);
+        //     return result;
+        // }
 
         // Need to check if this is the correct way to chain methods in Java with optionals 
         //.flatMap returns me the value
@@ -40,14 +40,14 @@ class Roster extends KeyableMap<Student> {
 
         // if the inner annonymous func in flatMap returns null, flatMap will return me an Optional
         // else return me the value which I need to chain it with other methods
-        // String result = String.format("No such record: %s %s %s",
-        //     studentId,moduleId,assessmentId);
-        // String grade = super.get(studentId)
-        //     .flatMap(x -> x.get(moduleId))
-        //     .flatMap(x -> x.get(assessmentId))
-        //     .map(x -> x.getGrade())
-        //     .orElse(result);
-        //return grade;
+        String result = String.format("No such record: %s %s %s",
+            studentId,moduleId,assessmentId);
+        String grade = super.get(studentId)
+            .flatMap(x -> x.get(moduleId))
+            .flatMap(x -> x.get(assessmentId))
+            .map(x -> x.getGrade())
+            .orElse(result);
+        return grade;
     }
 
     @Override
