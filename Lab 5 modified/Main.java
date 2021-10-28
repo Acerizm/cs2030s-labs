@@ -65,6 +65,7 @@ class Main {
                         }
                     }
                 } catch (Exception error) {
+                    scanner.close();
                     throw error;
                 }
             }
