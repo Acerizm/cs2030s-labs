@@ -3,12 +3,24 @@ import java.util.stream.Stream;
 import javax.xml.stream.util.StreamReaderDelegate;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.stream.Collectors;
-
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
+// //comparator class here
+// class SortByDecending implements Comparator<Integer> {
+//     public int compare(int a, int b) {
+//         if (a == b) {
+//             return 0;
+//         } else if (a < b)
+//     }
+// }
 
 class Main {
 
@@ -16,7 +28,8 @@ class Main {
         //System.out.println(countTwinPrimes(100));
         //boolean test = isPrime(5+2);
         //System.out.println(test);
-        System.out.println(reverse("abc"));                                                   
+        //System.out.println(reverse("abc")); 
+        System.out.println(normalizedMean(Stream.<Integer>of(1, 1)));                                                  
 
     }
 
@@ -101,4 +114,42 @@ class Main {
              )
              .count();
     }
+
+    // Credits: https://stackoverflow.com/questions/66828296/how-do-i-find-the-normalized-mean-of-a-stream
+    // public static double normalizedMean(Stream < Integer > stream) {
+    //     List < Integer > sortedList = stream.sorted().collect(Collectors.toList());
+    //     Integer max = sortedList.get(sortedList.size() - 1);
+    //     Integer min = sortedList.get(0);
+    //     long count = sortedList.size();
+    //     Integer sum = sortedList.stream().mapToInt(Integer::intValue).sum();
+    //     return (double)((sum / count) - min) / (max - min);
+    // }
+
+    //My own algo
+    // Idea: https://stackoverflow.com/questions/66828296/how-do-i-find-the-normalized-mean-of-a-stream
+    public static double normalizedMean(Stream<Integer> stream) {
+        //too slow algo
+        // int max = stream.sorted().reduce(
+        //     0, 
+        //     (sum,currentVal) -> {
+        //         if (currentVal > sum) {
+        //             return sum+currentVal;
+        //         } else {
+        //             return sum;
+        //         }
+        //     }
+        //     );
+        List<Integer> streamCopy = stream.collect(Collectors.toList());
+        //Supplier<Stream<Integer>> streamSupplier = () -> stream;
+        // streams cannot be used twice
+        double max = streamCopy.stream().mapToDouble(x -> x).max().orElse(0.0);
+        double min = streamCopy.stream().mapToDouble(x -> x).min().orElse(0.0);
+        // //.count() method returns count because Java
+        long count = streamCopy.stream().count();
+        double sum = streamCopy.stream().mapToDouble(x -> x).sum();
+        // I am forced to use optionals because i cannot use if-else
+        Optional<Double> mean = Optional.ofNullable(((sum / count) - min) / (max - min)).filter(meanValue -> !Double.isNaN(meanValue));
+        //streamCopy.stream().
+        return mean.orElse(0.0);
+    }   
 }
