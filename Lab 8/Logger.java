@@ -1,3 +1,4 @@
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.Optional;
 
@@ -43,12 +44,30 @@ class Logger<T> {
         return value;
     }
 
-    //get method?
+    //map method
+    // Function takes in two arguements
+    // T refers to type of input arguement
+    // U refers to the return type of the function
+    // .apply will return type of U
+    // this.get() is of type T
+    <U> Logger<U> map(Function<? super T,? extends U> mapper) {
+        get();
+        System.out.println(this.cache.get());
+        return Logger.<U>of(() -> 
+            mapper.apply(get())
+        );
+    }
 
     // toString method
-    @Override
+    @Override   
     public String toString() {
-        return "Logger[" + this.get() + "]";
+        //include the output of the value changes over all map operations.
+        //this.cache.ifPresent(x -> System.out.println(x));
+        // String previousValue = "" + this.cache;
+        // System.out.println(previousValue);
+         String string = "Logger[" + this.supplier.get() + "]";
+        System.out.println(this.cache);
+        return string;
     }
 
 }
