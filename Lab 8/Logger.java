@@ -8,6 +8,10 @@ class Logger<T> {
     // where the function will only be executed if 
     // you use supplier.get() to exceute the function
     // aka being lazy and save resources
+
+    //Qn: Do we need to really cache here?
+    // Or we can save the previous values into an array or String
+    // so as to satisfy the map function method signature below
     private final Supplier<T> supplier;
     private Optional<T> cache;
 
@@ -15,6 +19,11 @@ class Logger<T> {
     private Logger(Supplier<T> supplier) {
         this.supplier = supplier;
         this.cache = Optional.<T>empty();
+    }
+
+    private Logger(Supplier<T> supplier, T cache) {
+        this.supplier = supplier;
+        this.cache = Optional.ofNullable(cache);
     }
 
     // alternative constructor using generics
@@ -25,6 +34,20 @@ class Logger<T> {
             .orElseThrow(() -> {
                 throw new IllegalArgumentException("argument cannot be null");
             })
+        );
+        return tempLogger;
+    }
+
+    //need to store the cache when creating a new logger
+    // because we need to print the previous value;
+    // and this lab the test case cant use get() method feelsbad
+    static <T> Logger<T> of(Supplier<T> supplier, T cache) {
+        //need to store the previous value into the cache
+        Logger<T> tempLogger = new Logger<T>(Optional.<Supplier<T>>ofNullable(supplier)
+            .orElseThrow(() -> {
+                throw new IllegalArgumentException("argument cannot be null");
+            }),
+            cache
         );
         return tempLogger;
     }
@@ -49,12 +72,10 @@ class Logger<T> {
     // T refers to type of input arguement
     // U refers to the return type of the function
     // .apply will return type of U
-    // this.get() is of type T
+    // this.get() is of type T and java will infer it as U
     <U> Logger<U> map(Function<? super T,? extends U> mapper) {
-        get();
-        System.out.println(this.cache.get());
-        return Logger.<U>of(() -> 
-            mapper.apply(get())
+        return Logger.<U>of(
+            () -> mapper.apply(this.get())
         );
     }
 
