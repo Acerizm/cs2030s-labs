@@ -66,6 +66,32 @@ class Logger<T> {
         return new Logger<U>(newValue.value,newValue.outputOfValues);          
     }
 
+    //Level 4
+    @Override
+    // Need to override the original method signature from the object class
+    // Two loggers are equal if and only if both the wrapped value as well as the logs are the same.
+    // meaning the outputValues must also be the same
+    public boolean equals(Object value) {
+        //getClass() returns the runtime type
+        if (value instanceof Logger) {
+            if (this.getClass() == value.getClass()) {
+                //I need to check the ouputs but how?
+                // when the value is of type object?
+                @SuppressWarnings("unchecked")
+                Logger<T> tempLogger = (Logger<T>)value;
+                if (tempLogger.outputOfValues == this.outputOfValues) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }    
+    }
+
     //toString method
     @Override
     public String toString() {
