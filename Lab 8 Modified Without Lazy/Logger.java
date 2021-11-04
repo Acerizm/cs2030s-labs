@@ -3,7 +3,7 @@ import java.util.function.Function;
 
 class Logger<T> {
     private final T value;
-    private final String outputOfValues;
+    private String outputOfValues;
 
     //constructor
     //private means that I STILL CAN USE IT within this class
@@ -32,29 +32,38 @@ class Logger<T> {
         return new Logger<T>(value);
     }
 
-    public String get() {
+    public T getValue() {
+        return this.value;
+    }
+
+    public String getOutputOfValues() {
         return this.outputOfValues;
     }
 
     //Level 2
     <U> Logger<U> map(Function<? super T, ? extends U> mapper) {
-        // if (this.outputOfValues == "") {
-        //     System.out.println("hello World");
-        //     U newValue = mapper.apply(this.value);
-        //     String newOutputValues = this.outputOfValues + newValue;
-        //     return new Logger<U>(newValue,newOutputValues);
-        // } else {
-        //     return new Logger<U>(mapper.apply(this.value));
-        // }
-        //fix this algo here
-        // I printed to a string because the string "can store any type".
-        // You can also choose to store the outputs into a list but wgt
-        T oldValue = this.value;
-        U newValue = mapper.apply((this.value));
-        String newOutputValues = this.outputOfValues + "\n" + oldValue + " -> " + newValue;
-        //I am using the private constructor NOT the static factory method to 
-        //construct the Logger :D
-        return new Logger<U>(newValue,newOutputValues);
+        try {
+            //fix this algo here
+            // I printed to a string because the string "can store any type".
+            // You can also choose to store the outputs into a list but wgt
+            T oldValue = this.value;
+            U newValue = mapper.apply(this.value);
+            String newOutputValues = this.outputOfValues + "\n" + oldValue + " -> " + newValue;
+            //I am using the private constructor NOT the static factory method to 
+            //construct the Logger :D
+            return new Logger<U>(newValue,newOutputValues);
+        } catch (Exception ex) {
+            throw ex;
+        }
+        
+    }
+
+    //Level 3
+    <U> Logger<U> flatMap(Function<? super T,? extends Logger<? extends U>> mapper) { 
+        String oldValues = this.outputOfValues;
+        Logger<? extends U> newValue = mapper.apply(this.value);
+        newValue.outputOfValues = oldValues + newValue.outputOfValues;
+        return new Logger<U>(newValue.value,newValue.outputOfValues);          
     }
 
     //toString method
