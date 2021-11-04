@@ -74,22 +74,25 @@ class Logger<T> {
     public boolean equals(Object value) {
         //getClass() returns the runtime type
         if (value instanceof Logger) {
-            if (this.getClass() == value.getClass()) {
-                //I need to check the ouputs but how?
-                // when the value is of type object?
-                @SuppressWarnings("unchecked")
-                Logger<T> tempLogger = (Logger<T>)value;
-                if (tempLogger.outputOfValues == this.outputOfValues) {
-                    return true;
-                } else {
-                    return false;
-                }
+            //@SuppressWarnings("unchecked")
+            // Basically downcast value from Object Type to ? wildcard
+            // the compiler will allow you to access any methods available
+            // since ? can be ANY type
+            // but you must check if value has the SAME RUN-TYPE as Logger first
+            // if not there will be a run-time error as you might access
+            // methods that the run-type class dosn't have.
+            Logger<?> tempLogger = (Logger<?>)value;
+            if (tempLogger.outputOfValues.equals(this.outputOfValues)) {
+                return true;
             } else {
+                // this is when the past values are not the same
+                // in your cache/string/list etc.
                 return false;
             }
         } else {
+            // this is for non-loggers
             return false;
-        }    
+        }
     }
 
     //toString method
