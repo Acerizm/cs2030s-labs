@@ -95,6 +95,7 @@ class Logger<T> {
         }
     }
 
+
     //toString method
     @Override
     public String toString() {
