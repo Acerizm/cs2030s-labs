@@ -23,8 +23,7 @@ class EventComparator implements Comparator<Event> {
         } else {
             // this algo needs to prioritize which event has higher priority
             if(i.getState() == EventEnumState.DoneEvent && j.getState() == EventEnumState.ServeEvent) {
-                return -1;
-            
+                return -1; 
             } else if(i.getState() == EventEnumState.DoneEvent && j.getState() == EventEnumState.ArriveEvent) {
                 return -1;
             } else if(i.getState() == EventEnumState.ServeEvent && j.getState() == EventEnumState.DoneEvent) {
