@@ -5,10 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Simulator {
-    
-    // Cannot use builder pattern because this mod can only use private final :(
-    // So far I have not used Customer :D
-    
+     
     public Simulator() { }
 
     // refactored code for common usage ///////////////////////////////////
@@ -50,7 +47,36 @@ public class Simulator {
         }
         return tempHashMap;  
     }
-    
+
+    void removeServer(List<Server> list, int serverId) {
+        for(int i = 0; i < list.size(); i++) {
+            Server currentServer = list.get(i);
+            if(currentServer.getId() == serverId) {
+                list.remove(i);
+                break;
+            }
+            else {
+                continue;
+            }
+        }
+    }
+
+    boolean IsServerResting(List<Server> restingList, int serverId) {
+        if (restingList.isEmpty()) {
+            return false;
+        } else {
+            for(int i = 0; i < restingList.size(); i++) {
+                Server currentServer = restingList.get(i);
+                if(currentServer.getId() == serverId) {
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+            return false;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -421,6 +447,259 @@ public class Simulator {
                     );
                 }
             }
+        }
+
+        // print out the stats here
+        double averageWaitingTime = totalWaitingTime / numOfCustomers;
+        String stats = String.format("[%.3f %d %d]",averageWaitingTime,numOfCustomers,numOfCustomersLeft);
+        System.out.println(stats);
+    }
+
+    //level 3
+    public void simulate(int numOfCustomers,int numOfServers, int maxQueueLength, List<Double> arrivalTimeList, List<Double> serviceTimeList, List<Double> restingTimeList) {
+        //local variables
+        PriorityQueue queue = this.createPriorityQueue(arrivalTimeList);
+        List<Server> serverList = this.createServerList(numOfServers);
+
+        //need to track which server is resting now
+        List<Server> restingServersList = new ArrayList<Server>();
+
+        HashMap<Integer,Double> customerHashMap = this.createCustomerHashMap(serviceTimeList);
+        // for stats
+        double totalWaitingTime = 0;
+        //int numOfCustomers = queue.get().size();
+        int numOfCustomersLeft = 0;
+
+        // need to track which Events are waiting
+        // so that I wont print those that are waiting again
+        //List<Event> tempWaitingList = new ArrayList<Event>();
+        HashMap<Integer,Event> waitingHashMap = new HashMap<Integer,Event>();
+
+        // Simulation starts here
+        while(!queue.get().isEmpty()) {
+            Event currentEvent = queue.poll();
+
+            // Get the current customer Id
+            int currentCustomerId = currentEvent.getCustomerId();
+            double currentEventTime = currentEvent.getTime();
+
+            if(currentEvent.getState() == EventEnumState.ArriveEvent) {
+                boolean customerHasServer = false;
+                //check if there are available servers to serve the current customer
+                for (int i = 0; i < serverList.size(); i++) {
+                    Server currentServer = serverList.get(i);
+                    // boolean test = IsServerResting(restingServersList, currentServer.getId());
+                    if(!currentServer.isServingAnotherCustomer() && !IsServerResting(restingServersList, currentServer.getId())) {
+                        customerHasServer = true;
+                        // Server updatedServer = new Server(i+1, currentCustomerId, currentEventTime);
+                        Server updatedServer = new Server(currentServer.getId(), currentCustomerId, currentEventTime);
+                        serverList.set(i, updatedServer);
+                        // Event from Arrive -> Serve
+                        //Event newEvent = new ServeEvent(currentCustomerId, updatedServer.getNextAvailableTime(), j+1);
+                        // Event newEvent = new Event(currentCustomerId, updatedServer.getNextAvailableTime(), i+1,EventEnumState.ServeEvent);
+                        Event newEvent = new Event(currentCustomerId, updatedServer.getNextAvailableTime(), updatedServer.getId(),EventEnumState.ServeEvent);
+                        queue.add(newEvent);
+                        break;
+                    } else {
+                        continue;
+                    }
+                } //end of for-loop
+                // This happens when the all the servers are serving at least 1 customer
+                // then now we check if there is a server with an empty waiting queue
+                if(customerHasServer == false) {
+                    for(int i = 0; i < serverList.size(); i++) {
+                        Server currentServer = serverList.get(i);
+                        if(currentServer.isServingAnotherCustomer() && !IsServerResting(restingServersList, currentServer.getId())){
+                            if(currentServer.isWaitingQueueFull(maxQueueLength)) {
+                                // when the server is extremly busy
+                                // is currently serving a customer and the waiting queue is full
+                                continue;
+                            } else {
+                                if(currentCustomerId == 14) {
+                                    System.out.println(currentServer.getWaitingCustomerList());
+                                }
+                                // server is currently serving another customer
+                                // but can add customer to the waiting queue
+                                customerHasServer = true;
+                                //Server updatedServer = new Server(i+1,currentServer.getServingCustomerId(),currentCustomerId,currentServer.getNextAvailableTime());
+                                Server updatedServer = currentServer.addMoreWaitingCustomer(currentCustomerId);
+                                serverList.set(i, updatedServer);
+                                // Event from Arrive -> Wait
+                                //double newEventTime = currentEvent.getTime() + currentEvent.getServingTime();
+                                // Bug
+                                // What is the time for the new Event?
+                                //Event newEvent = new WaitEvent(currentCustomerId, currentEvent.getTime(), i+1);
+                                // Event newEvent = new Event(currentCustomerId, currentEvent.getTime(), i+1,EventEnumState.WaitEvent);
+                                Event newEvent = new Event(currentCustomerId, currentEvent.getTime(), updatedServer.getId(),EventEnumState.WaitEvent);
+                                queue.add(newEvent);
+                                break;
+                            }
+                        } else {
+                            continue;
+                        }
+                    } //end of for loop
+                    
+                    //Check if the customer still does not have a server
+                    // Event from Arrive -> Leave
+                    if(customerHasServer == false) {
+                        // Event from Arrive -> Leave
+                        // Pass in 0 because there is no server
+                        //Event newEvent = new LeaveEvent(currentCustomerId, currentEventTime, 0);
+                        Event newEvent = new Event(currentCustomerId, currentEventTime, 0,EventEnumState.LeaveEvent);
+                        queue.add(newEvent);
+                        // add to the stats
+                        numOfCustomersLeft = numOfCustomersLeft + 1;
+                        numOfCustomers = numOfCustomers - 1;
+                    }
+                }
+                System.out.println(currentEvent);
+            } else if(currentEvent.getState() == EventEnumState.ServeEvent) {
+                // Serve the customer immediately
+                // Change State from Serve -> Done
+                // Qn: Remove the currentCustomer from the server?
+                // Ans: no
+                Server currentServer = serverList.get(currentEvent.getServerId() - 1);
+                // Level 2 chamges here
+                //double afterServeTime = currentEventTime + currentEvent.getServingTime();
+                double afterServeTime = currentEventTime + customerHashMap.get(currentCustomerId);
+                Server updatedServer = new Server(currentEvent.getServerId(), currentServer.getServingCustomerId(), currentServer.getWaitingCustomerList(), afterServeTime);
+                serverList.set(currentEvent.getServerId() - 1, updatedServer);
+                Event newEvent = new Event(currentCustomerId, afterServeTime, currentEvent.getServerId(),EventEnumState.DoneEvent);
+                queue.add(newEvent);
+                System.out.println(currentEvent);
+
+            } else if(currentEvent.getState() == EventEnumState.DoneEvent) {
+                // level 3 requirement
+                // need to make the server rest after the server served the customer
+                // take out the server from the server list?
+
+                Server currentServer = serverList.get(currentEvent.getServerId() - 1);
+                int waitingCustomerId;
+                if(currentServer.getWaitingCustomerList().isEmpty()) {
+                    waitingCustomerId = 0;
+                } else {
+                    waitingCustomerId = currentServer.getWaitingCustomerList().get(0);
+                }
+
+                // Huge bug here
+                // Server updatedServer = currentServer.serveEarliestWaitingCustomer(waitingCustomerId);
+                // serverList.set(currentServer.getId() - 1, updatedServer);
+
+                for(int i = 0; i < queue.get().size(); i++) {
+                    Event findWaitEvent = queue.get().get(i);
+                    if (findWaitEvent.getState() ==  EventEnumState.WaitEvent && findWaitEvent.getCustomerId() == waitingCustomerId) {
+                        double nextServeTime = findWaitEvent.getTime() + restingTimeList.get(0);
+                        totalWaitingTime+=restingTimeList.get(0);
+                        //restingTimeList.remove(0);
+                        //Event newEvent = new Event(waitingCustomerId, findWaitEvent.getTime(), findWaitEvent.getServerId(),EventEnumState.ServeEvent);
+                        Event newEvent = new Event(waitingCustomerId, nextServeTime, findWaitEvent.getServerId(),EventEnumState.ServeEvent);
+                        queue.get().set(i,newEvent);
+
+                        // Level 3 requirement
+                        // add another resting event
+                        Event newRestingEvent = new Event(waitingCustomerId, findWaitEvent.getTime(), findWaitEvent.getServerId(),EventEnumState.RestingEvent);
+                        queue.get().add(i,newRestingEvent);
+
+                        // need to also update the server again
+                        // cause the nextAvailable time is different when the server rests
+                        // updatedServer = updatedServer.updateTimeOnly(updatedServer.getNextAvailableTime() + restingTimeList.get(0));
+                        // serverList.set(currentServer.getId() - 1, updatedServer);
+                        Server updatedServer = currentServer.updateTimeOnly(currentServer.getNextAvailableTime() + restingTimeList.get(0));
+                        serverList.set(currentServer.getId() - 1, updatedServer);
+                        restingTimeList.remove(0);
+                        
+                        
+                        //then remove the currentServer from the serverList to the restingList
+                        //serverList.remove(currentServer.getId() - 1);
+                        // removeServer(serverList, updatedServer.getId());
+                        restingServersList.add(updatedServer);
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+
+                // when the Server is completely free
+                if(waitingCustomerId == 0) {
+                    // Level 3 requirement
+                    // add another resting event
+                    double currentTime = currentEvent.getTime() + restingTimeList.get(0);
+
+                    // need to also update the server again
+                    // cause the nextAvailable time is different when the server rests
+                    // updatedServer = updatedServer.updateTimeOnly(updatedServer.getNextAvailableTime() + restingTimeList.get(0));
+                    // serverList.set(currentServer.getId() - 1, updatedServer);
+                    Server updatedServer = currentServer.updateTimeOnly(currentServer.getNextAvailableTime() + restingTimeList.get(0));
+                    serverList.set(currentServer.getId() - 1, updatedServer);
+
+                    restingTimeList.remove(0);
+                    Event newRestingEvent = new Event(waitingCustomerId, currentTime, currentEvent.getServerId(),EventEnumState.RestingEvent);
+                    queue.get().add(newRestingEvent);
+
+                    restingServersList.add(updatedServer);
+                }
+               System.out.println(currentEvent);      
+            } else if(currentEvent.getState() == EventEnumState.WaitEvent) {
+                //harderst part of this project
+                // Check if the server can serve the customer now
+                // if the currentServingid has been changed from the DoneState
+                Server currentServer = serverList.get(currentEvent.getServerId() - 1);
+                if(currentServer.getServingCustomerId() == currentCustomerId) {
+                    // Wait -> Serve
+                    //Server updatedServer = new Server(currentServer.getId(), currentCustomerId, currentServer.getServingCustomerId(), currentServer.getNextAvailableTime());
+                    Server updatedServer = currentServer.serveEarliestWaitingCustomer(currentCustomerId);
+                    serverList.set(currentServer.getId() - 1, updatedServer);
+                    double servingTime = updatedServer.getNextAvailableTime();
+                    //Event newEvent = new ServeEvent(currentCustomerId, servingTime,currentServer.getId());
+                    Event newEvent = new Event(currentCustomerId, servingTime,currentServer.getId(),EventEnumState.ServeEvent);
+                    queue.add(newEvent);
+                    // add to the stats
+                    totalWaitingTime = totalWaitingTime + servingTime - currentEvent.getTime();
+                    System.out.println(currentEvent);
+                    // remove the waiting customer from the waiting list
+                    waitingHashMap.remove(currentCustomerId);
+                } else {
+                    // This happens when I still need to wait
+                    // need to update the time
+                    //Server updatedServer = new Server(currentServer.getId(), currentServer.getServingCustomerId(), currentServer.getWaitingCustomerId(), currentServer.getNextAvailableTime());
+                    Server updatedServer = currentServer.updateTimeOnly(currentServer.getNextAvailableTime());
+                    serverList.set(currentServer.getId() - 1, updatedServer);
+                    double waitingTime = updatedServer.getNextAvailableTime();
+                    //Event newEvent = new WaitEvent(currentCustomerId, waitingTime,currentServer.getId());
+                    Event newEvent = new Event(currentCustomerId, waitingTime,currentServer.getId(),EventEnumState.WaitEvent);
+                    queue.add(newEvent);
+                    // add to the stats
+                    totalWaitingTime = totalWaitingTime + waitingTime - currentEvent.getTime();
+                    // add to the waitingList
+                    // test if the waitingList contains the event
+                    Optional<Event> test = Optional.ofNullable(waitingHashMap.get(currentCustomerId));
+                    test.ifPresentOrElse(
+                        event -> {
+                            //System.out.println(currentEvent);
+                            waitingHashMap.put(currentCustomerId,newEvent);
+                        }, 
+                        () -> {
+                            System.out.println(currentEvent);
+                            waitingHashMap.put(currentCustomerId,newEvent);
+                        }
+                    );
+                }
+            } else if(currentEvent.getState() == EventEnumState.RestingEvent) {
+                // add back the missing Server from the resting list to the Server list
+                // Bug here and I have no idea how to fix this
+                
+                removeServer(restingServersList, currentEvent.getServerId());
+                Server currentServer = serverList.get(currentEvent.getServerId() - 1);
+                int waitingCustomerId;
+                if(currentServer.getWaitingCustomerList().isEmpty()) {
+                    waitingCustomerId = 0;
+                } else {
+                    waitingCustomerId = currentServer.getWaitingCustomerList().get(0);
+                }
+                Server updatedServer = currentServer.serveEarliestWaitingCustomer(waitingCustomerId);
+                serverList.set(currentServer.getId() - 1, updatedServer);
+            }
+
         }
 
         // print out the stats here

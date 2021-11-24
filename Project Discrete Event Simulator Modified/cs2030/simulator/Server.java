@@ -100,7 +100,8 @@ class Server {
     }
 
     boolean isWaitingQueueFull(int maxQueueLength) {
-        return this.waitingCustomerList.size() == maxQueueLength;
+        // return this.waitingCustomerList.size() == maxQueueLength;
+        return this.waitingCustomerList.size() >= maxQueueLength;
     }
 
     double getNextAvailableTime() {

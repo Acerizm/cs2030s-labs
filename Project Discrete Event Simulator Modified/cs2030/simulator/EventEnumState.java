@@ -5,7 +5,8 @@ public enum EventEnumState {
     WaitEvent,
     LeaveEvent,
     DoneEvent,
-    ServeEvent;
+    ServeEvent,
+    RestingEvent;
 
     public EventEnumState nextState(String state) {
         EventEnumState newState;
@@ -18,12 +19,19 @@ public enum EventEnumState {
                 break;
             case "Leave":
                 newState = WaitEvent;
+                break;
             case "Serve":
                 newState = ServeEvent;
+                break;
             case "Done":
                 newState = DoneEvent;
+                break;
+            case "Resting":
+                newState = RestingEvent;
+                break;
             default:
                 newState = ArriveEvent;
+                break;
         }
         return newState;
     }  
